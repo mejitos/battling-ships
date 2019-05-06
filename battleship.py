@@ -13,26 +13,72 @@ import os
 
 
 def main():
-    # Create players grids. Each player needs primary grid and target grid
-    p1_primary = Grid().create_grid(Grid.grid_x, Grid.grid_y)
-    p1_target = Grid().create_grid(Grid.grid_x, Grid.grid_y)
+    # Create players and their grids
+    p1 = Player(name="Esko")
+    p1.grid.create_grids()
 
-    p2_primary = Grid().create_grid(Grid.grid_x, Grid.grid_y)
-    p2_target = Grid().create_grid(Grid.grid_x, Grid.grid_y)
+    p2 = Player(name="Matti")
+    p2.grid.create_grids()
     
     # Print the initial grids to the screen
     print('---------- ---------- Player 1 ---------- ----------')
     print()
-    Grid.draw_grids(p1_primary, p1_target)
+    p1.grid.draw_grids()
     print('---------- ---------- ---------- ---------- ----------')
     print()
 
     print('---------- ---------- Player 2 ---------- ----------')
     print()
-    Grid.draw_grids(p2_primary, p2_target)
+    p2.grid.draw_grids()
     print('---------- ---------- ---------- ---------- ----------')
     print()
 
+    # Deploy Player 1's ships to the grid
+    for ship in p1.ships:
+        while True:
+            print(f"{p1.name}}, deploy your {ship.ship_class} [{ship.length}]")
+            print("Enter the start and the end coordinates of the ship")
+            start = input("Starting coordinate > ")
+            end = input("Ending coordinate > ")
+
+            # Checks if the input is valid +++ and if the grid is free
+            if Grid.valid_coordinates(start, end, ship):
+                p1.grid.deploy_ship(start, end, ship)
+                print(f'{ship.ship_class} successfully deployed to {ship.location}!')
+                break
+            else:
+                print("~~~~~~~~~~ Invalid input! ~~~~~~~~~~")
+        
+    # Deploy Player 2's ships to the grid
+    for ship in p2.ships:
+        while True:
+            print(f"{p2.name}}, deploy your {ship.ship_class} [{ship.length}]")
+            print("Enter the start and the end coordinates of the ship")
+            start = input("Starting coordinate > ")
+            end = input("Ending coordinate > ")
+
+            # Checks if the input is valid +++ and if the grid is free
+            if Grid.valid_coordinates(start, end, ship):
+                p1.grid.deploy_ship(start, end, ship)
+                print(f'{ship.ship_class} successfully deployed to {ship.location}!')
+                break
+            else:
+                print("~~~~~~~~~~ Invalid input! ~~~~~~~~~~")
+
+    # Print the grids with the deployed boats
+    print('---------- ---------- Player 1 ---------- ----------')
+    print()
+    p1.grid.draw_grids()
+    print('---------- ---------- ---------- ---------- ----------')
+    print()
+
+    print('---------- ---------- Player 2 ---------- ----------')
+    print()
+    p2.grid.draw_grids()
+    print('---------- ---------- ---------- ---------- ----------')
+    print()
+    
+    # Shoot for your lives
     run = True
     while run:
         # Player 1 shoots
@@ -42,18 +88,18 @@ def main():
         
         os.system('cls')
 
-        Grid.shot(shot, p2_primary, p1_target)
+        Grid.shot(shot, p2.grid.primary, p1.grid.tracking)
 
-        print('---------- ---------- Player 1 ---------- ----------')
+        print('---------- ---------- ---------- ---------- Player 1 ---------- ---------- ---------- ----------')
         print()
-        Grid.draw_grids(p1_primary, p1_target)
-        print('---------- ---------- ---------- ---------- ----------')
+        p1.grid.draw_grids()
+        print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
         
-        print('---------- ---------- Player 2 ---------- ----------')
+        print('---------- ---------- ---------- ---------- Player 2 ---------- ---------- ---------- ----------')
         print()
-        Grid.draw_grids(p2_primary, p2_target)
-        print('---------- ---------- ---------- ---------- ----------')
+        p2.grid.draw_grids()
+        print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
 
         # Player 2 shoots
@@ -63,17 +109,17 @@ def main():
         
         os.system('cls')
 
-        Grid.shot(shot, p1_primary, p2_target)
+        Grid.shot(shot, p1.grid.primary, p2.grid.tracking)
 
         print('---------- ---------- ---------- ---------- Player 1 ---------- ---------- ---------- ----------')
         print()
-        Grid.draw_grids(p1_primary, p1_target)
+        p1.grid.draw_grids()
         print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
         
         print('---------- ---------- ---------- ---------- Player 2 ---------- ---------- ---------- ----------')
         print()
-        Grid.draw_grids(p2_primary, p2_target)
+        p2.grid.draw_grids()
         print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
 
