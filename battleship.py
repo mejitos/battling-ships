@@ -3,7 +3,6 @@ Battleship game which in the future you can play with your friend through networ
 ...hopefully
 """
 
-#TODO: Tracking grid probably doesn't need to be made of objects -> less memory?
 #TODO: Need to make some sense to all the classes and their functions
 #TODO: Somekind of GameState class to instatiate and control the game
 #TODO: "UI"-class to handle all the drawing - just for the learning purposes
@@ -22,17 +21,14 @@ import os
 def main():
     # Create players and their grids
     p1 = Player(name="Esko")
-    p1.grid.create_grids()
-
     p2 = Player(name="Matti")
-    p2.grid.create_grids()
     
     # Deploy Player 1's ships to the grid
     for ship in p1.ships:
         while True:
             print('---------- ---------- ---------- ---------- Player 1 ---------- ---------- ---------- ----------')
             print()
-            p1.grid.draw_grids()
+            print(p1.grid.draw_grids())
             print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
             print()
             print(f"{p1.name}, deploy your {ship.ship_class} [{ship.length}]")
@@ -54,7 +50,7 @@ def main():
         while True:
             print('---------- ---------- ---------- ---------- Player 2 ---------- ---------- ---------- ----------')
             print()
-            p2.grid.draw_grids()
+            print(p2.grid.draw_grids())
             print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
             print()
             print(f"{p2.name}, deploy your {ship.ship_class} [{ship.length}]")
@@ -73,21 +69,20 @@ def main():
 
     
     # Shoot for your lives
-    run = True
-    while run:        
+    while True:        
         # Player 1's turn
         while True:
             os.system('cls')
 
             print('---------- ---------- ---------- ---------- Player 1 ---------- ---------- ---------- ----------')
             print()
-            p1.grid.draw_grids()
+            print(p1.grid.draw_grids())
             print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
             print()
             
             print('---------- ---------- ---------- ---------- Player 2 ---------- ---------- ---------- ----------')
             print()
-            p2.grid.draw_grids()
+            print(p2.grid.draw_grids())
             print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
             print()
 
@@ -104,13 +99,13 @@ def main():
 
         print('---------- ---------- ---------- ---------- Player 1 ---------- ---------- ---------- ----------')
         print()
-        p1.grid.draw_grids()
+        print(p1.grid.draw_grids())
         print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
         
         print('---------- ---------- ---------- ---------- Player 2 ---------- ---------- ---------- ----------')
         print()
-        p2.grid.draw_grids()
+        print(p2.grid.draw_grids())
         print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
 
@@ -119,7 +114,6 @@ def main():
         
         if p2.has_lost():
             input(f'{p1.name} has won the game')
-            run = False
             break
 
         # Player 2's turn
@@ -128,13 +122,13 @@ def main():
 
             print('---------- ---------- ---------- ---------- Player 1 ---------- ---------- ---------- ----------')
             print()
-            p1.grid.draw_grids()
+            print(p1.grid.draw_grids())
             print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
             print()
             
             print('---------- ---------- ---------- ---------- Player 2 ---------- ---------- ---------- ----------')
             print()
-            p2.grid.draw_grids()
+            print(p2.grid.draw_grids())
             print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
             print()
             
@@ -151,13 +145,13 @@ def main():
 
         print('---------- ---------- ---------- ---------- Player 1 ---------- ---------- ---------- ----------')
         print()
-        p1.grid.draw_grids()
+        print(p1.grid.draw_grids())
         print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
         
         print('---------- ---------- ---------- ---------- Player 2 ---------- ---------- ---------- ----------')
         print()
-        p2.grid.draw_grids()
+        print(p2.grid.draw_grids())
         print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
         print()
 
@@ -166,7 +160,6 @@ def main():
         
         if p1.has_lost():
             input(f'{p2.name} has won the game')
-            run = False
             break
 
     input("Exit the game by pressing ENTER")

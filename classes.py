@@ -1,3 +1,14 @@
+class GameState:
+    """ Class which would work as a game engine for the game """
+
+    def __init__(self, player1, player2):
+        self.player1 = player1
+        self.player2 = player2
+
+    
+    
+
+    
 class Grid:
     """ Class for the grids """
     
@@ -13,58 +24,47 @@ class Grid:
 
 
     def __init__(self):
-        self.primary = [[], [], [], [], [], [], [], [], [], []]
-        self.tracking = [[], [], [], [], [], [], [], [], [], []]
+        self.primary = [
+            [Square(Grid.GRID_X[i], Grid.GRID_Y[j], Grid.EMPTY) for i in range(len(Grid.GRID_X))] \
+            for j in range(len(Grid.GRID_Y))]
+        self.tracking = [
+            [Grid.EMPTY for i in range(len(Grid.GRID_X))] \
+            for j in range(len(Grid.GRID_Y))]
+
     
-
-    def create_grids(self):
-        """ Create the primary and tracking grids for the player """
-        
-        for j in range(len(Grid.GRID_Y)):
-            for i in range(len(Grid.GRID_X)):
-                sp = Square(Grid.GRID_X[i], Grid.GRID_Y[j], Grid.EMPTY)
-                self.primary[j].append(sp)
-                st = Square(Grid.GRID_X[i], Grid.GRID_Y[j], Grid.EMPTY)
-                self.tracking[j].append(st)
-
-
     def draw_grids(self):
-        """ Draws the primary grid and the tracking grid to the screen """
+        """ Returns a single string of the players primary and tracking grids """
 
-        grid = [[], [], [], [], [], [], [], [], [], [], []]
+        grid = ''
+        row_tracking = ''
+        
+        for i in range(len(Grid.GRID_X) + 1):
+            for j in range(len(Grid.GRID_Y) + 1):
+                if i == 0:
+                    if j == 0:
+                        grid += '___|'
+                        row_tracking += '___|'
+                    if j >= 1:
+                        grid += f'_{Grid.GRID_X[j - 1]}_|'
+                        row_tracking += f'_{Grid.GRID_X[j - 1]}_|'
+                if i > 0:
+                    if j == 0:
+                        if i < len(Grid.GRID_Y):
+                            grid += f'_{Grid.GRID_Y[i - 1]}_|'
+                            row_tracking += f'_{Grid.GRID_Y[i - 1]}_|'
+                        if i == len(Grid.GRID_Y):
+                            grid += f'{Grid.GRID_Y[i - 1]}_|'
+                            row_tracking += f'{Grid.GRID_Y[i - 1]}_|'
+                    if j >= 1:
+                        grid += f'_{self.primary[i - 1][j - 1].state}_|'
+                        row_tracking += f'_{Grid.EMPTY}_|'
+                if j == len(Grid.GRID_X):
+                    grid += '\t\t'
+                    grid += row_tracking
+                    grid += '\n'
+                    row_tracking = ''
 
-        for i in range(2):
-            for col in range(len(grid)):
-                for row in range(len(grid)):
-                    # Add the empty corner
-                    if col == 0 and row == 0:
-                        grid[col].append(f'___|')
-                    # Add the first column
-                    if col == 0 and row <= len(Grid.GRID_Y) - 1:
-                        if row + 1 == len(Grid.GRID_Y):
-                            grid[row+1].append('10_|')
-                        else:
-                            grid[row + 1].append(f'_{Grid.GRID_Y[row]}_|')
-                    # Add the top row
-                    if row == 0 and col <= len(Grid.GRID_X) - 1:
-                        grid[row].append(f'_{Grid.GRID_X[col]}_|')
-                        # Tab for the next grid
-                        if col == len(Grid.GRID_X) - 1:
-                            grid[row].append('\t\t')
-                    # Add the rest of the grid with square state
-                    if col >= 1 and row >= 1:
-                        if i == 0:                        
-                            grid[col].append(f'_{self.primary[col - 1][row - 1].state}_|')
-                        else:
-                            grid[col].append(f'_{self.tracking[col - 1][row - 1].state}_|')
-                    # Tab for the next grid
-                    if i == 0 and row == 10 and col >= 1 and col <= 10:    
-                        grid[col].append('\t\t')
-
-        print('\t\t Primary Grid \t\t\t\t\t\t Tracking Grid')
-        print()
-        for row in grid:
-            print(''.join(row))
+        return grid
 
     
     def shot(shot, primary, tracking):
@@ -75,12 +75,12 @@ class Grid:
                 if primary[j][i].x + primary[j][i].y == shot:
                     if primary[j][i].state == Grid.EMPTY:
                         primary[j][i].state = Grid.MISS
-                        tracking[j][i].state = Grid.MISS
+                        tracking[j][i] = Grid.MISS
                     elif primary[j][i].state == Grid.SHIP:
                         primary[j][i].state = Grid.SHIP_HIT
                         primary[j][i].ship.location.remove(shot)
                         primary[j][i].ship = None
-                        tracking[j][i].state = Grid.HIT
+                        tracking[j][i] = Grid.HIT
 
     
     def validate_shot(shot):
@@ -190,7 +190,6 @@ class Grid:
         else:
             return False
         
-
 
 class Square:
     """ Class for the square of the grid """
