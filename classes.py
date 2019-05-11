@@ -1,40 +1,155 @@
-class GameState:
+import os
+import random
+
+class Game:
     """ Class which would work as a game engine for the game """
 
-    def __init__(self, player1, player2):
-        self.player1 = player1
-        self.player2 = player2
-
+    def __init__(self, players):
+        self.players = players
     
     
+    def valid_deployment(start, end, ship, ships):
+        """
+        Checks whether the coordinates are already occupied and if not,
+        adds the coordinates to the ship location
+        
+        - Checks if the coordinates itself are valid or not
+        - Checks if the distance between coordinates is right
+        - Checks if the x- or y-coordinates are the same
+        - Checks if the xy- or yx-coordinates are input the other way around
+        - Checks if the input coordinate is already found on ships locations
+        - If found, return False and reset ships location, else add it to ships location
+        """
+        # TODO: Is there easier way to check for occupied squares?
+
+        if Game.valid_coordinate(start) and Game.valid_coordinate(end):
+            if abs(ord(end[0]) - ord(start[0])) == ship.length - 1 or \
+                abs(int(end[1:]) - int(start[1:])) == ship.length - 1:
+                if start[0] == end[0]:
+                    if int(start[1:]) > int(end[1:]):
+                        for i in range(ship.length):
+                            for s in ships:
+                                if start[0] + str(int(end[1:]) + i) in s.location:
+                                    ship.location = []
+                                    return False
+                            ship.location.append(start[0] + str(int(end[1:]) + i))
+                        return True
+                    else:
+                        for i in range(ship.length):
+                            for s in ships:
+                                if start[0] + str(int(start[1:]) + i) in s.location:
+                                    ship.location = []
+                                    return False
+                            ship.location.append(start[0] + str(int(start[1:]) + i))
+                        return True
+                elif start[1:] == end[1:]:
+                    if ord(start[0]) > ord(end[0]):
+                        for i in range(ship.length):
+                            for s in ships:
+                                if chr(ord(end[0]) + i) + start[1:] in s.location:
+                                    ship.location = []
+                                    return False
+                            ship.location.append(chr(ord(end[0]) + i) + start[1:])
+                        return True
+                    else:
+                        for i in range(ship.length):
+                            for s in ships:
+                                if chr(ord(start[0]) + i) + start[1:] in s.location:
+                                    ship.location = []
+                                    return False
+                            ship.location.append(chr(ord(start[0]) + i) + start[1:])
+                        return True
 
     
-class Grid:
-    """ Class for the grids """
-    
-    # Grid x- and y-axis
-    GRID_X = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H','I', 'J']
-    GRID_Y = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    # Icons for the primary and tracking grids
-    EMPTY = ' '
-    SHIP = '#'
-    SHIP_HIT = '@'
-    HIT = 'X'
-    MISS = 'O'
+    def valid_coordinate(coordinate):
+        """ Checks if the players input coordinate is valid or not """
+
+        if len(coordinate) < 2:
+            return False
+        if coordinate[0] in Grid.GRID_X and coordinate[1:] in Grid.GRID_Y:
+            return True
 
 
-    def __init__(self):
-        self.primary = [
-            [Square(Grid.GRID_X[i], Grid.GRID_Y[j], Grid.EMPTY) for i in range(len(Grid.GRID_X))] \
-            for j in range(len(Grid.GRID_Y))]
-        self.tracking = [
-            [Grid.EMPTY for i in range(len(Grid.GRID_X))] \
-            for j in range(len(Grid.GRID_Y))]
+    def draw_first_blood(self):
+        """ Does a coin toss which defines the player who starts the game """
+
+        flip = random.randint(0, 1)
+        if flip == 1:
+            self.players[0].turn = True
+        else:
+            self.players[1].turn = True
 
     
-    def draw_grids(self):
+    def shot_result(self, shot):
+        """ Makes the changes to the grid according to the shot result """
+
+        if self.players[0].turn:
+            for j in range(len(Grid.GRID_X)):
+                for i in range(len(Grid.GRID_Y)):
+                    if self.players[1].grid.primary[j][i].x + \
+                        self.players[1].grid.primary[j][i].y == shot:
+                        if self.players[1].grid.primary[j][i].state == Grid.EMPTY:
+                            self.players[1].grid.primary[j][i].state = Grid.MISS
+                            self.players[0].grid.tracking[j][i].state = Grid.MISS
+                            return None
+                        elif self.players[1].grid.primary[j][i].state == Grid.SHIP:
+                            ship = self.players[1].grid.primary[j][i].ship
+                            self.players[1].grid.primary[j][i].state = Grid.SHIP_HIT
+                            self.players[1].grid.primary[j][i].ship = None
+                            self.players[0].grid.tracking[j][i].state = Grid.HIT
+                            return ship
+        else:
+            for j in range(len(Grid.GRID_X)):
+                for i in range(len(Grid.GRID_Y)):
+                    if self.players[0].grid.primary[j][i].x + \
+                        self.players[0].grid.primary[j][i].y == shot:
+                        if self.players[0].grid.primary[j][i].state == Grid.EMPTY:
+                            self.players[0].grid.primary[j][i].state = Grid.MISS
+                            self.players[1].grid.tracking[j][i].state = Grid.MISS
+                            return None
+                        elif self.players[0].grid.primary[j][i].state == Grid.SHIP:
+                            ship = self.players[0].grid.primary[j][i].ship
+                            self.players[0].grid.primary[j][i].state = Grid.SHIP_HIT
+                            self.players[0].grid.primary[j][i].ship = None
+                            self.players[1].grid.tracking[j][i].state = Grid.HIT
+                            return ship
+    
+    
+    def change_turns(self):
+        """ Changes the player turn """
+
+        if self.players[0].turn == True:
+            self.players[0].turn = False
+            self.players[1].turn = True
+        else:
+            self.players[0].turn = True
+            self.players[1].turn = False
+    
+    
+    def game_over(self):
+        """ Checks if player has lost after opponents shot thus ending the game """
+
+        for player in self.players:
+            if len(player.ships) == 0:
+                player.winner = False
+                return True
+
+
+    def draw_grids(player):
+        """ Draws the players grids to the screen """
+
+        os.system('cls')
+        print(f'---------- ---------- ---------- ---------- {player.name} ---------- ---------- ---------- ----------')
+        print('\t\t Primary Grid \t\t\t\t\t\t Tracking Grid')
+        print()
+        print(Game.build_grids(player.grid))
+        print('---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ----------')
+        print()
+    
+
+    def build_grids(player_grid):
         """ Returns a single string of the players primary and tracking grids """
-
+        
         grid = ''
         row_tracking = ''
         
@@ -56,8 +171,8 @@ class Grid:
                             grid += f'{Grid.GRID_Y[i - 1]}_|'
                             row_tracking += f'{Grid.GRID_Y[i - 1]}_|'
                     if j >= 1:
-                        grid += f'_{self.primary[i - 1][j - 1].state}_|'
-                        row_tracking += f'_{Grid.EMPTY}_|'
+                        grid += f'_{player_grid.primary[i - 1][j - 1].state}_|'
+                        row_tracking += f'_{player_grid.tracking[i - 1][j - 1].state}_|'
                 if j == len(Grid.GRID_X):
                     grid += '\t\t'
                     grid += row_tracking
@@ -67,32 +182,31 @@ class Grid:
         return grid
 
     
-    def shot(shot, primary, tracking):
-        """ Changes the state of the shot square accordingly """
-
-        for j in range(len(primary)):
-            for i in range(len(primary[j])):
-                if primary[j][i].x + primary[j][i].y == shot:
-                    if primary[j][i].state == Grid.EMPTY:
-                        primary[j][i].state = Grid.MISS
-                        tracking[j][i] = Grid.MISS
-                    elif primary[j][i].state == Grid.SHIP:
-                        primary[j][i].state = Grid.SHIP_HIT
-                        primary[j][i].ship.location.remove(shot)
-                        primary[j][i].ship = None
-                        tracking[j][i] = Grid.HIT
-
+class Grid:
+    """ Class for the grids """
     
-    def validate_shot(shot):
-        """ Checks if the player input shot coordinates are valid"""
+    # Grid x- and y-axis
+    GRID_X = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H','I', 'J']
+    GRID_Y = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    # Icons for the primary and tracking grids
+    EMPTY = ' '
+    SHIP = '#'
+    SHIP_HIT = '@'
+    HIT = 'X'
+    MISS = 'O'
 
-        if len(shot) == 2 or shot[1:] == '10':
-            if shot[0] in Grid.GRID_X and shot[1:] in Grid.GRID_Y:
-                return True
-            else:
-                return False
-        else:
-            return False
+
+    def __init__(self):
+        self.primary = [
+            [Square(Grid.GRID_X[i], Grid.GRID_Y[j], Grid.EMPTY) \
+                for i in range(len(Grid.GRID_X))] \
+                    for j in range(len(Grid.GRID_Y))
+                    ]
+        self.tracking = [
+            [Square(Grid.GRID_X[i], Grid.GRID_Y[j], Grid.EMPTY) \
+                for i in range(len(Grid.GRID_X))] \
+                    for j in range(len(Grid.GRID_Y))
+                    ]
 
 
     def deploy_ship(self, ship):
@@ -101,94 +215,10 @@ class Grid:
         for c in range(len(ship.location)):
             for i in range(len(self.primary)):
                 for j in range(len(self.primary)):
-                    if self.primary[i][j].x == ship.location[c][0] and self.primary[i][j].y == ship.location[c][1:]:
+                    if self.primary[i][j].x == ship.location[c][0] and \
+                        self.primary[i][j].y == ship.location[c][1:]:
                         self.primary[i][j].state = Grid.SHIP
                         self.primary[i][j].ship = ship
-
-
-    def can_be_deployed(start, end, ship, ships):
-        """
-        Checks whether the coordinates are already occupied and if not,
-        adds the coordinates to the ship location
-        """
-
-        # Starting and ending coordinates of the ship
-        start_x = start[0]
-        start_y = start[1:]
-        end_x = end[0]
-        end_y = end[1:]
-
-        """
-        - Checks if the x- or y-coordinates are the same
-        - Checks if the xy- or yx-coordinates are input the other way around
-        - Checks if the input coordinate is already found on ships locations
-        - If found, return False
-        - If coordinate not on ships, add it to ships location
-        """
-        if start_x == end_x:
-            if int(start_y) > int(end_y):
-                for i in range(ship.length):
-                    for s in ships:
-                        if start_x + str(int(end_y) + i) in s.location:
-                            ship.location = []
-                            return False
-                    ship.location.append(start_x + str(int(end_y) + i))
-                return True
-            else:
-                for i in range(ship.length):
-                    for s in ships:
-                        if start_x + str(int(start_y) + i) in s.location:
-                            ship.location = []
-                            return False
-                    ship.location.append(start_x + str(int(start_y) + i))
-                return True
-        elif start_y == end_y:
-            if ord(start_x) > ord(end_x):
-                for i in range(ship.length):
-                    for s in ships:
-                        if chr(ord(end_x) + i) + start_y in s.location:
-                            ship.location = []
-                            return False
-                    ship.location.append(chr(ord(end_x) + i) + start_y)
-                return True
-            else:
-                for i in range(ship.length):
-                    for s in ships:
-                        if chr(ord(start_x) + i) + start_y in s.location:
-                            ship.location = []
-                            return False
-                    ship.location.append(chr(ord(start_x) + i) + start_y)
-                return True
-
-
-    def valid_coordinates(start, end, ship):
-        """
-        Checks if players input coordinates are valid or not by checking:
-        - if the length of the inputs are correct or if the y is 10
-        - if the starting coordinate is valid
-        - if the ending coordinate is valid
-        - if the x- or y-coordinates are the same
-        - if the distance between x- or y-coordinates matches the ship length
-        """
-
-        if (len(start) == 2 and len(end) == 2) or (start[1:] == '10' or end[1:] == '10'):
-            if start[0] in Grid.GRID_X and start[1:] in Grid.GRID_Y:
-                if end[0] in Grid.GRID_X and end[1:] in Grid.GRID_Y:
-                    if start[0] == end[0] or start[1:] == end[1:]:
-                        if abs(ord(end[0]) - ord(start[0])) == ship.length - 1:
-                            return True
-                        elif abs(int(end[1:]) - int(start[1:])) == ship.length - 1:
-                            return True
-                        else:
-                            return False
-                    else:
-                        return False
-                else:
-                    return False
-            else:
-                return False
-        else:
-            return False
         
 
 class Square:
@@ -201,7 +231,18 @@ class Square:
         self.ship = None
 
 
-class Carrier():
+class Ship:
+    """ Main class for ship functions """
+
+    def sunk(self):
+        if len(self.location) == 0:
+            return True
+    
+    def make_damage(self, shot):
+        self.location.remove(shot)
+
+
+class Carrier(Ship):
     """ Ship with the size of 5 """
 
     def __init__(self):
@@ -210,7 +251,7 @@ class Carrier():
         self.location = []
 
 
-class Battleship():
+class Battleship(Ship):
     """ Ship with the size of 4 """
 
     def __init__(self):
@@ -219,7 +260,7 @@ class Battleship():
         self.location = [] 
 
 
-class Cruiser():
+class Cruiser(Ship):
     """ Ship with the size of 3 """
 
     def __init__(self):
@@ -228,7 +269,7 @@ class Cruiser():
         self.location = [] 
 
 
-class Submarine():
+class Submarine(Ship):
     """ Ship with the size of 3 """
 
     def __init__(self):
@@ -237,7 +278,7 @@ class Submarine():
         self.location = [] 
 
 
-class Destroyer():
+class Destroyer(Ship):
     """ Ship with the size of 2 """
 
     def __init__(self):
@@ -251,20 +292,7 @@ class Player:
 
     def __init__(self, name):
         self.name = name
-        self.turn = False
         self.ships = [Carrier(), Battleship(), Cruiser(), Submarine(), Destroyer()]
         self.grid = Grid()
-
-    def has_lost(self):
-        """ Checks if player has lost after opponents shot """
-
-        if len(self.ships) == 0:
-            return True
-
-    def is_sunk(self):
-        """ Checks whether a ship in players ships has sunk """
-
-        for ship in self.ships:
-            if len(ship.location) == 0:
-                self.ships.remove(ship)
-                return True
+        self.turn = False
+        self.winner = True
